@@ -13,25 +13,44 @@ def main():
     setup_ui()
     vp = VideoProcessor()
     # rag = RAGPipeline()  # Commented out
-    
+
     job_url, video_input, uploaded_file, analyze_btn = sidebar_inputs()
 
     if analyze_btn:
         if not job_url:
             st.error("Please provide a job posting URL to analyze.")
             return
-            
+
         try:
-            with st.status("Deep Analysis in Progress...", expanded=True) as status:
+            with st.spinner("Deep Analysis in Progress..."):
                 docs = []
-                sources = {"job": "", "video": ""}
+                sources = {
+                    "job": {
+                        "title": "",
+                        "description": "",
+                        "links": [],
+                        "documents": []
+                    },
+                    "video": ""
+                }
 
                 # Process Job Post
                 st.write("🔍 Deep Scanning Job Post...")
-                job_text = scrape_job_post(job_url)
-                sources["job"] = job_text
-                docs.append(Document(page_content=job_text, 
-                                   metadata={"source": "job_post"}))
+                scraped_data = scrape_job_post(job_url)
+
+                if "error" in scraped_data:
+                    st.error(scraped_data["error"])
+                    return
+
+                sources["job"]["title"] = scraped_data["title"]
+                sources["job"]["description"] = scraped_data["description"]
+                sources["job"]["links"] = scraped_data["links"]
+                sources["job"]["documents"] = scraped_data["documents"]
+
+                docs.append(Document(
+                    page_content=sources["job"]["description"],
+                    metadata={"source": "job_post"}
+                ))
 
                 # Process Video
                 if video_input or uploaded_file:
@@ -40,8 +59,10 @@ def main():
                     try:
                         video_text = vp.transcribe_video(video_source)
                         sources["video"] = video_text
-                        docs.append(Document(page_content=video_text, 
-                                          metadata={"source": "video"}))
+                        docs.append(Document(
+                            page_content=video_text,
+                            metadata={"source": "video"}
+                        ))
                     except Exception as video_error:
                         st.warning(f"Video processing failed: {str(video_error)}")
 
@@ -50,9 +71,7 @@ def main():
                 # retriever = rag.create_knowledge_base(docs)
                 # analysis = rag.generate_response(analysis_prompt, retriever)
                 # proposal = rag.generate_proposal(analysis["answer"], retriever)
-                
-                status.update(label="Scraping Complete!", state="complete")
-                
+
                 # Dummy data for UI compatibility
                 analysis = {"answer": "## LLM Analysis Disabled\n*Scraping development mode*"}
                 proposal = "Proposal generation currently disabled"

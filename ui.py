@@ -29,7 +29,7 @@ def display_results(analysis, proposal, sources):
 
     st.markdown("---")
     st.subheader("📝 Laser-Targeted Proposal")
-    
+
     tab1, tab2 = st.tabs(["Formatted View", "Plain Text"])
     with tab1:
         st.markdown(proposal)
@@ -42,7 +42,21 @@ def display_results(analysis, proposal, sources):
 
     with st.expander("🔍 Full Source Materials"):
         st.subheader("Complete Job Post Analysis")
-        st.markdown(f"```\n{sources['job']}\n```")
+        st.markdown(f"**Title:** {sources['job']['title']}\n\n")
+        st.markdown(f"**Description:**\n```\n{sources['job']['description']}\n```")
+
+        if sources["job"]["links"]:
+            st.markdown("---")
+            st.subheader("Extracted Links")
+            for link in sources["job"]["links"]:
+                st.markdown(f"- {link}")  # Display the actual link directly
+
+        if sources["job"]["documents"]:
+            st.markdown("---")
+            st.subheader("Extracted Documents")
+            for doc in sources["job"]["documents"]:
+                st.markdown(f"- {doc}")  # Display the actual document link directly
+
         if sources["video"]:
             st.markdown("---")
             st.subheader("Full Video Transcript")

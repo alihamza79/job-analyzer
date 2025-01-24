@@ -1,11 +1,16 @@
-from dotenv import load_dotenv
+# config.py
+
 import os
 import random
+import re
+from dotenv import load_dotenv
 
 load_dotenv()
 
+# Environment Variables
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
+# User Agents List for Request Headers
 USER_AGENTS = [
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15',
@@ -13,11 +18,15 @@ USER_AGENTS = [
 ]
 
 def get_headers():
+    """
+    Returns a dictionary of HTTP headers with a random User-Agent.
+    """
     return {
         'User-Agent': random.choice(USER_AGENTS),
         'Accept-Language': 'en-US,en;q=0.9'
     }
 
+# Unwanted Patterns to Clean Job Descriptions
 UNWANTED_PATTERNS = [
     r'\$[\d,.]+',
     r'Proposals:.*',
