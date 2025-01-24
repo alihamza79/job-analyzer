@@ -11,6 +11,43 @@ from langchain.docstore.document import Document
 load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
+def clean_scraped_content(description_sections):
+    """Clean unwanted elements from scraped content"""
+    unwanted_patterns = [
+        r'\$[\d,.]+',  # Prices
+        r'Proposals:.*',
+        r'Interviewing:\d+',
+        r'Invites sent:\d+',
+        r'Last viewed by client:.*',
+        r'How it works',
+        r'About Upwork',
+        r'Find the best freelance jobs',
+        r'Explore Upwork opportunities',
+        r'total spent',
+        r'\d+ hires',
+        r'Posted On:',
+        r'^-\s[A-Z][a-z]+[A-Z]',  # Capitalized hyphen items
+        r'Remote Job',
+        r'Ongoing projectProject Type',
+        r'Activity on this job'
+    ]
+    
+    clean_lines = []
+    for line in description_sections:
+        # Skip empty lines and Upwork boilerplate
+        if not line.strip() or 'Upwork' in line:
+            continue
+            
+        # Check against unwanted patterns
+        if not any(re.search(pattern, line) for pattern in unwanted_patterns):
+            # Clean residual artifacts
+            clean_line = re.sub(r'Close the tooltip.*?\.\s*', '', line)
+            clean_line = re.sub(r'\s{2,}', ' ', clean_line).strip()
+            if clean_line and len(clean_line) > 30:
+                clean_lines.append(clean_line)
+    
+    return clean_lines
+
 def scrape_job_post(url):
     try:
         headers = {
@@ -43,33 +80,12 @@ def scrape_job_post(url):
                     if text and len(text) > 30:  # Filter out short paragraphs
                         description_sections.append(text)
 
-        # Extract metadata using regex patterns
-        full_text = soup.get_text()
-        metadata = {
-            'budget': re.search(r'Budget:\s*(\$[\d,]+)', full_text),
-            'duration': re.search(r'Duration:\s*([\w\s]+)', full_text),
-            'experience': re.search(r'Experience Level:\s*([\w\s]+)', full_text)
-        }
-        
-        # Format metadata
-        formatted_metadata = "\n".join([
-            f"- {key}: {val.group(1) if val else 'Not specified'}" 
-            for key, val in metadata.items()
-        ])
-
-        # Extract skills using keyword proximity
-        skills = []
-        skills_header = soup.find(lambda tag: re.search(r'Skills|Requirements', tag.text, re.IGNORECASE))
-        if skills_header:
-            skills_container = skills_header.find_next(['ul', 'div'])
-            if skills_container:
-                skills = [li.get_text(strip=True) 
-                         for li in skills_container.find_all('li')][:10]  # Limit to 10 skills
+        # Clean the scraped content
+        cleaned_description = clean_scraped_content(description_sections)
 
         return (
             f"JOB TITLE: {title}\n\n"
-            f"DESCRIPTION:\n" + '\n'.join(description_sections) + "\n\n"
-            
+            f"DESCRIPTION:\n" + '\n'.join(cleaned_description) + "\n\n"
         )
     except Exception as e:
         return f"Job post scraping error: {str(e)}"
