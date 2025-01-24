@@ -1,3 +1,6 @@
+# File: video_processor.py
+# Handles video processing and transcription
+
 import whisper
 from pytube import YouTube
 import tempfile
