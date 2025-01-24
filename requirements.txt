@@ -1,0 +1,14 @@
+streamlit
+langchain
+langchain-groq
+python-dotenv
+faiss-cpu
+sentence-transformers
+pytube
+openai-whisper
+unstructured
+youtube-dl
+ffmpeg-python
+pyperclip
+beautifulsoup4
+requests
