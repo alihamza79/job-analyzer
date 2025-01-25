@@ -1,3 +1,4 @@
+# Updated job_scraper.py
 import requests
 import random
 import time
@@ -38,9 +39,9 @@ def scrape_job_post(url):
         headers = get_headers()
         proxies = get_proxy()
         
-        # Add cookie simulation
+        # Fixed cookie simulation (explicit integers)
         session.cookies.update({
-            'session_id': str(random.randint(1e6, 1e7)),
+            'session_id': str(random.randint(1000000, 10000000)),  # Explicit integers
             'ak_bmsc': ''.join(random.choices('abcdef0123456789', k=256))
         })
 
