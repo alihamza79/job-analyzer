@@ -1,14 +1,26 @@
-streamlit
-langchain
-langchain-groq
-python-dotenv
-faiss-cpu
-sentence-transformers
-pytube
-openai-whisper
-unstructured
-youtube-dl
-ffmpeg-python
-pyperclip
-beautifulsoup4
-requests
+# Core dependencies
+streamlit>=1.30.0
+langchain>=0.1.0
+langchain-groq>=0.1.0
+langchain-core>=0.1.0
+python-dotenv>=1.0.0
+python-multipart>=0.0.6
+
+# Vector store and embeddings
+faiss-cpu>=1.7.4
+sentence-transformers>=2.2.2
+
+# Video processing
+pytube>=15.0.0
+openai-whisper>=20231117
+ffmpeg-python>=0.2.0
+
+# Web scraping and parsing
+beautifulsoup4>=4.12.0
+requests>=2.31.0
+
+# Utility
+pyperclip>=1.8.2
+
+# Community packages
+langchain-community>=0.0.10

@@ -35,49 +35,73 @@ class RAGPipeline:
         )
         
         prompt = ChatPromptTemplate.from_template("""
-        Analyze the job post and video transcript with surgical precision:
-        
+        Please carefully analyze all provided documents and relevant data:
+
         CONTEXT:
         {context}
-        
+
         QUERY:
         {input}
-        
-        Create comprehensive analysis with:
-        1. EXACT technical requirements from both sources
-        2. SPECIFIC client pain points mentioned
-        3. PROJECT GOALS extracted verbatim
-        4. CLIENT'S DEEP NEEDS inferred from context
-        5. ACTIONABLE SOLUTION COMPONENTS
-        
-        Structure analysis with clear section headers. Use bullet points for requirements.
+
+        Generate a concise analysis including:
+        1. Key technical requirements
+        2. Specific client needs or pain points
+        3. Project or business goals
+        4. Any deeper insights based on context
+
+        If no video content is provided, do not mention it.
+        Separate your findings with clear headings or bullet points.
         """)
         
         document_chain = create_stuff_documents_chain(llm, prompt)
         retrieval_chain = create_retrieval_chain(retriever, document_chain)
         return retrieval_chain.invoke({"input": query})
     
-    def generate_proposal(self, analysis_result, retriever):
+    def generate_proposal(self, analysis_result, retriever, template=None, has_video=False):
+        """
+        Create a proposal either using the default prompt or a user-provided template.
+        The user-provided template must contain '{analysis}' to embed the analysis results.
+        If has_video=False, do not mention or assume video references.
+        """
         llm = ChatGroq(
             temperature=0.3,
             model_name="llama3-70b-8192"
         )
-        
-        prompt = ChatPromptTemplate.from_template("""
-        Create hyper-personalized proposal using EXACT details:
+
+        # Build a more human-sounding default prompt dynamically
+        base_prompt = """
+        You are an experienced freelancer. Write a clear, client-focused proposal:
         
         ANALYSIS: {analysis}
-        
-        Structure:
-        - Open with SPECIFIC project understanding
-        - Address ALL stated requirements from job post
-        - Reference SPECIFIC video points
-        - Timeline with phase details
-        - Relevant experience MATCHING exact needs
-        - Clear next steps
-        
-        Use client's terminology from sources. Include 5 SPECIFIC examples.
-        """)
+
+        GUIDELINES:
+        - Start with a greeting that acknowledges the client’s specific project or problem.
+        - Highlight the main requirements from the job posting.
+        - {video_line}
+        - Outline how you plan to address the needs step by step.
+        - Mention relevant experience you have for these requirements.
+        - Suggest next steps or a clear call to action.
+        - Keep the style professional but friendly, focusing on real value.
+
+        IMPORTANT:
+        - If there is no video, avoid any reference to it or a transcript.
+        - Try to sound natural and conversational, not AI-generated.
+        """
+
+        if has_video:
+            video_line = "If applicable, briefly mention insights gained from the video."
+        else:
+            video_line = "If no video is mentioned, skip any reference to it."
+
+        # Insert the correct line for referencing video or not
+        final_prompt = base_prompt.replace("{video_line}", video_line)
+
+        if template and "{analysis}" in template:
+            # If user provided a custom template with {analysis}, we use that
+            prompt = ChatPromptTemplate.from_template(template)
+        else:
+            # Use the dynamic default prompt
+            prompt = ChatPromptTemplate.from_template(final_prompt)
         
         chain = prompt | llm | StrOutputParser()
         return chain.invoke({"analysis": analysis_result})

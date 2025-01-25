@@ -1,4 +1,4 @@
-# config.py
+# File: config.py
 
 import os
 import random
